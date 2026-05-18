@@ -1,16 +1,29 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
+  const { login, loading } = useAuth()
 
-  function handleSubmit(e) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e) {
     e.preventDefault()
+    setError('')
+    const { ok, error: err } = await login(email, password)
+    if (ok) {
+      navigate('/shop')
+    } else {
+      setError(err || 'Credenciales incorrectas')
+    }
   }
 
   return (
-    <div className="bg-background text-on-background min-h-screen flex flex-col items-center justify-center relative overflow-hidden font-body-md">      
-      {/* Login Container */}
+    <div className="bg-background text-on-background min-h-screen flex flex-col items-center justify-center relative overflow-hidden font-body-md">
       <main className="relative z-10 w-full max-w-[420px] px-8">
         {/* Brand */}
         <header className="text-center mb-stack-lg">
@@ -19,7 +32,7 @@ export default function LoginPage() {
           </h1>
         </header>
 
-        {/* Form Module */}
+        {/* Form */}
         <div className="p-8 rounded-xl md:px-10">
           <form className="space-y-stack-md" onSubmit={handleSubmit}>
             {/* Email */}
@@ -38,11 +51,14 @@ export default function LoginPage() {
                   mail
                 </span>
                 <input
-                  className="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body-md placeholder:text-on-surface-variant"
                   id="email"
                   type="email"
                   placeholder="nombre@ejemplo.com"
                   autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body-md placeholder:text-on-surface-variant"
                 />
               </div>
             </div>
@@ -65,11 +81,14 @@ export default function LoginPage() {
                   lock
                 </span>
                 <input
-                  className="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body-md placeholder:text-on-surface-variant"
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body-md placeholder:text-on-surface-variant"
                 />
                 <button
                   type="button"
@@ -84,15 +103,25 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Error */}
+            {error && (
+              <p className="font-label-sm text-label-sm text-error px-unit">{error}</p>
+            )}
+
             {/* Submit */}
             <button
-              className="w-full bg-primary-container text-on-primary-container py-4 rounded-lg font-headline-sm text-headline-sm transition-all duration-300 active:scale-95 hover:shadow-[0_0_15px_rgba(98,54,255,0.4)] mt-4"
               type="submit"
+              disabled={loading}
+              className="w-full bg-primary-container text-on-primary-container py-4 rounded-lg font-headline-sm text-headline-sm transition-all duration-300 active:scale-95 hover:shadow-[0_0_15px_rgba(98,54,255,0.4)] mt-4 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
+              {loading && (
+                <span className="material-symbols-outlined animate-spin text-[18px]">
+                  progress_activity
+                </span>
+              )}
               Iniciar Sesión
             </button>
           </form>
-
         </div>
 
         {/* Footer */}

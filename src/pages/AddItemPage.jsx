@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../services/api'
 
 const PLACEHOLDER_IMG =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDM8Mr2Pw4sQ6NQiVX8MaKXIh6dRtdmStqKtYfK0C0SgLppqA5CqUdTNIQAy_46NrfeKr6JE6NuF1W2N3G-PdxchxOcpl68p03M6087G9pnc-qi6L8vU6FL2HkVju7mNkUF-TqJRMeU6FaMdUd932ycVYnZDBxBmHOLifOofDDnIu0YiVxxnSHjJ7Yi4bilDGdcuGh7R-wIBGSrIlgtz9ofV-3gIBgk7ns67gMPJjr1KjjOFopYCgCu4-302F1qd7U20XQZu9nNOw_5'
@@ -10,21 +11,47 @@ export default function AddItemPage() {
   const fileInputRef = useRef(null)
 
   const [imagePreview, setImagePreview] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('')
   const [saved, setSaved] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   function handleImageChange(e) {
     const file = e.target.files?.[0]
-    if (file) setImagePreview(URL.createObjectURL(file))
+    if (file) {
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setError('')
+    setLoading(true)
+
+    const formData = new FormData()
+    formData.append('name', name)
+    formData.append('description', description)
+    formData.append('price', price)
+    formData.append('stock', stock)
+    if (imageFile) formData.append('image', imageFile)
+
+    try {
+      await api.addProduct(formData)
+      setSaved(true)
+      setTimeout(() => {
+        setSaved(false)
+        navigate('/shop')
+      }, 1500)
+    } catch {
+      setError('Error al guardar el artículo')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -173,12 +200,15 @@ export default function AddItemPage() {
             </div>
           </div>
 
+          {error && <p className="font-label-sm text-label-sm text-error px-1">{error}</p>}
+
           {/* ── Bottom Action Bar ── */}
           <div className="fixed bottom-0 left-0 w-full bg-surface/80 backdrop-blur-xl border-t border-outline-variant/10 p-4 z-50">
             <div className="max-w-2xl mx-auto">
               <button
                 type="submit"
-                className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-headline-sm text-headline-sm shadow-lg active:scale-95 transition-all duration-200
+                disabled={loading}
+                className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-headline-sm text-headline-sm shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed
                   ${saved
                     ? 'bg-secondary text-white shadow-secondary/20'
                     : 'bg-primary text-on-primary shadow-primary/20'
@@ -188,6 +218,11 @@ export default function AddItemPage() {
                   <>
                     <span className="material-symbols-outlined">check_circle</span>
                     ¡Artículo guardado!
+                  </>
+                ) : loading ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                    Guardando...
                   </>
                 ) : (
                   <>

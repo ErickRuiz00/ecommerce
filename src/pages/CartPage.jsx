@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { api } from '../services/api'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -41,13 +42,17 @@ export default function CartPage() {
 
   function updateQty(id, delta) {
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item,
-      ),
+      prev.map((item) => {
+        if (item.id !== id) return item
+        const qty = Math.max(1, item.qty + delta)
+        api.updateCartItem(id, qty).catch(() => {})
+        return { ...item, qty }
+      }),
     )
   }
 
   function removeItem(id) {
+    api.removeFromCart(id).catch(() => {})
     setCartItems((prev) => prev.filter((item) => item.id !== id))
   }
 
@@ -91,7 +96,7 @@ export default function CartPage() {
           {cartItems.length > 0 && (
             <button
               type="button"
-              onClick={() => setCartItems([])}
+              onClick={() => { api.clearCart().catch(() => {}); setCartItems([]) }}
               className="flex items-center gap-1 font-label-md text-label-md text-error hover:bg-error/10 px-3 py-1.5 rounded-lg transition-colors active:scale-95"
             >
               <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
@@ -167,7 +172,13 @@ export default function CartPage() {
             {/* Checkout button */}
             <button
               type="button"
-              className="w-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm py-4 rounded-xl shadow-[0_0_20px_rgba(98,54,255,0.4)] active:scale-95 transition-all duration-200 flex items-center justify-center gap-3"
+              disabled={cartItems.length === 0}
+              onClick={async () => {
+                await api.checkout(cartItems).catch(() => {})
+                setCartItems([])
+                navigate('/shop')
+              }}
+              className="w-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm py-4 rounded-xl shadow-[0_0_20px_rgba(98,54,255,0.4)] active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Proceder al Checkout
               <span className="material-symbols-outlined">arrow_forward</span>
