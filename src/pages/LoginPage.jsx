@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -55,12 +56,6 @@ export default function LoginPage() {
                 >
                   Contraseña
                 </label>
-                <a
-                  className="font-label-sm text-label-sm text-secondary-container hover:opacity-80"
-                  href="#"
-                >
-                  ¿Olvidaste tu contraseña?
-                </a>
               </div>
               <div
                 className="flex items-center px-4 py-3 rounded-lg bg-surface-container-high"
@@ -104,9 +99,9 @@ export default function LoginPage() {
         <footer className="mt-stack-lg text-center">
           <p className="font-body-md text-on-surface-variant">
             ¿No tienes una cuenta?{' '}
-            <a className="text-primary font-semibold hover:underline" href="#">
+            <Link className="text-primary font-semibold hover:underline" to="/register">
               Regístrate ahora
-            </a>
+            </Link>
           </p>
         </footer>
       </main>
